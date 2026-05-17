@@ -1,252 +1,220 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Captură Semnătură Fullscreen</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Ecranul de start */
-        #start-zone {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semnătură AppSheet Instant</title>
 
-        /* Caseta albă din mijloc */
-        .container {
-            text-align: center;
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            max-width: 400px;
-            width: 100%;
-        }
-        h2 { margin-bottom: 10px; color: #333; }
-        p { margin-bottom: 25px; color: #666; }
-        
-        button {
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            border-radius: 6px;
-            transition: background 0.2s, transform 0.1s;
-        }
-        button:active { transform: scale(0.98); }
-        
-        /* Butonul albastru principal */
-        #enter-fullscreen {
-            padding: 16px 32px;
-            font-size: 18px;
-            background-color: #007bff;
-            color: white;
-            width: 100%;
-        }
-        #enter-fullscreen:hover { background-color: #0056b3; }
-        
-        /* Butonul Close - Pus în dreapta, aliniat pe verticală cu cel albastru */
-        .close-app-btn {
-            padding: 16px 28px;
-            font-size: 16px;
-            background-color: #6c757d;
-            color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            white-space: nowrap;
-            align-self: flex-end;
-            margin-bottom: 40px;
-        }
-        .close-app-btn:hover { background-color: #495057; }
-        
-        /* Modul Fullscreen */
-        #fullscreen-zone {
-            display: none;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            position: relative;
-        }
-        #signature-canvas {
-            width: 100%;
-            height: 100%;
-            cursor: crosshair;
-            display: block;
-        }
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .controls button {
-            padding: 12px 24px;
-            color: white;
-        }
-        button.clear-btn { background-color: #dc3545; }
-        button.clear-btn:hover { background-color: #bd2130; }
-        button.save-btn { background-color: #28a745; }
-        button.save-btn:hover { background-color: #218838; }
-    </style>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: Arial, sans-serif;
+    background:#f0f2f5;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+}
+
+#start-zone {
+    text-align:center;
+}
+
+.container {
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
+    max-width:400px;
+}
+
+button {
+    cursor:pointer;
+    border:none;
+    border-radius:6px;
+    padding:14px;
+    font-size:16px;
+}
+
+#enter {
+    width:100%;
+    background:#007bff;
+    color:white;
+}
+
+#enter:hover { background:#0056b3; }
+
+#fullscreen {
+    display:none;
+    width:100%;
+    height:100%;
+    position:relative;
+    background:white;
+}
+
+canvas {
+    width:100%;
+    height:100%;
+    touch-action:none;
+}
+
+.controls {
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:10px;
+    background:rgba(255,255,255,0.95);
+    padding:10px;
+    border-radius:10px;
+}
+
+.clear { background:#dc3545; color:white; }
+.save { background:#28a745; color:white; }
+.exit { background:#6c757d; color:white; }
+
+.clear:hover { background:#b52a37; }
+.save:hover { background:#1f7a31; }
+.exit:hover { background:#555; }
+</style>
 </head>
+
 <body>
 
-    <div id="start-zone">
-        <div class="container">
-            <h2>Sistem de Captură Semnătură</h2>
-            <p>Apasă butonul de mai jos pentru a deschide zona de desenare în tot ecranul.</p>
-            <button id="enter-fullscreen">Deschide Fullscreen</button>
-        </div>
-        <button id="close-page" class="close-app-btn">Închide Pagina (Close)</button>
+<div id="start-zone">
+    <div class="container">
+        <h2>Semnătură ridicare</h2>
+        <p>Apasă pentru a deschide ecranul de semnătură</p>
+        <button id="enter">Deschide</button>
     </div>
+</div>
 
-    <div id="fullscreen-zone">
-        <canvas id="signature-canvas"></canvas>
-        <div class="controls">
-            <button class="clear-btn" id="clear-canvas">Șterge</button>
-            <button class="save-btn" id="save-signature">Salvează Semnătura</button>
-            <button id="exit-fullscreen" style="background-color: #6c757d;">Ieșire</button>
-        </div>
+<div id="fullscreen">
+    <canvas id="c"></canvas>
+
+    <div class="controls">
+        <button class="clear" id="clear">Șterge</button>
+        <button class="save" id="save">Salvează</button>
+        <button class="exit" id="exit">Ieșire</button>
     </div>
+</div>
 
-    <script>
-        const startZone = document.getElementById('start-zone');
-        const fullscreenZone = document.getElementById('fullscreen-zone');
-        const canvas = document.getElementById('signature-canvas');
-        const ctx = canvas.getContext('2d');
-        
-        const btnEnter = document.getElementById('enter-fullscreen');
-        const btnExit = document.getElementById('exit-fullscreen');
-        const btnClosePage = document.getElementById('close-page');
-        const btnClear = document.getElementById('clear-canvas');
-        const btnSave = document.getElementById('save-signature');
+<script>
+const start = document.getElementById("start-zone");
+const full = document.getElementById("fullscreen");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
 
-        let isDrawing = false;
+let drawing = false;
 
-        // Logica de intrare/ieșire Fullscreen
-        btnEnter.addEventListener('click', () => {
-            if (fullscreenZone.requestFullscreen) { fullscreenZone.requestFullscreen(); }
-            else if (fullscreenZone.webkitRequestFullscreen) { fullscreenZone.webkitRequestFullscreen(); }
-        });
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+}
 
-        btnExit.addEventListener('click', () => {
-            if (document.exitFullscreen) { document.exitFullscreen(); }
-            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-        });
+window.addEventListener("resize", resize);
+resize();
 
-        // Închidere simplă pagină
-        btnClosePage.addEventListener('click', () => {
-            window.close(); 
-            window.history.back(); 
-            setTimeout(() => { window.location.replace("about:blank"); }, 100);
-        });
+document.getElementById("enter").onclick = () => {
+    start.style.display = "none";
+    full.style.display = "block";
+};
 
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+document.getElementById("exit").onclick = () => {
+    full.style.display = "none";
+    start.style.display = "block";
+};
 
-        function handleFullscreenChange() {
-            if (document.fullscreenElement) {
-                startZone.style.setProperty('display', 'none', 'important');
-                fullscreenZone.style.display = 'block';
-                resizeCanvas();
-            } else {
-                startZone.style.setProperty('display', 'flex', 'important');
-                fullscreenZone.style.display = 'none';
-            }
-        }
+function pos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
+        y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
+    };
+}
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-        }
+canvas.addEventListener("mousedown", e => {
+    drawing = true;
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+});
 
-        // Logica pentru Desen (Mouse și Touchscreen)
-        function startDrawing(e) {
-            isDrawing = true;
-            const bounds = canvas.getBoundingClientRect();
-            ctx.beginPath();
-            const clientX = e.clientX || e.touches[0].clientX;
-            const clientY = e.clientY || e.touches[0].clientY;
-            ctx.moveTo(clientX - bounds.left, clientY - bounds.top);
-        }
+canvas.addEventListener("mousemove", e => {
+    if (!drawing) return;
+    const p = pos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+});
 
-        function draw(e) {
-            if (!isDrawing) return;
-            const bounds = canvas.getBoundingClientRect();
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            if(clientX && clientY) {
-                ctx.lineTo(clientX - bounds.left, clientY - bounds.top);
-                ctx.stroke();
-            }
-            if(e.touches) e.preventDefault();
-        }
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("mouseleave", () => drawing = false);
 
-        function stopDrawing() { isDrawing = false; ctx.closePath(); }
+canvas.addEventListener("touchstart", e => {
+    drawing = true;
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    e.preventDefault();
+});
 
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseleave', stopDrawing);
-        canvas.addEventListener('touchstart', (e) => { startDrawing(e); e.preventDefault(); });
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
+canvas.addEventListener("touchmove", e => {
+    if (!drawing) return;
+    const p = pos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    e.preventDefault();
+});
 
-        btnClear.addEventListener('click', () => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+canvas.addEventListener("touchend", () => drawing = false);
 
-        // TRIMITERE IMAGINE CĂTRE GOOGLE APPS SCRIPT / DRIVE
-        btnSave.addEventListener('click', () => {
-            const imageURI = canvas.toDataURL('image/png');
-            
-            btnSave.innerText = "Se salvează...";
-            btnSave.disabled = true;
+document.getElementById("clear").onclick = () => {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+};
 
-            // ⚠️ ÎNLOCUIEȘTE TEXTUL DE MAI JOS CU LINK-UL TĂU LUNG DE LA DEPLOYMENT (WEB APP URL)
-            const appsScriptURL = "https://script.google.com/macros/s/AKfycbyNXmPbizIEslMlpdyqBT_sUuJ6KhfuZ4-mO9xBr6kN9i4k8cqFJ534UEUClgd3zu0pyQ/exec";
+document.getElementById("save").onclick = async () => {
 
-            fetch(appsScriptURL, {
-                method: "POST",
-                mode: "no-cors", 
-                cache: "no-cache",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image: imageURI })
+    const btn = document.getElementById("save");
+    btn.disabled = true;
+    btn.innerText = "Se salvează...";
+
+    const image = canvas.toDataURL("image/png");
+
+    const url = "https://script.google.com/macros/s/AKfycbxHpxRCo1pTAXWfwzXyiDsCu1slbkG6hBPx2hGkRxx1EJ8KZIOA1BUuZSaThiJ_pXmrFg/exec";
+
+    try {
+        await fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                image: image
             })
-            .then(() => {
-                alert("Semnătura a fost trimisă în baza de date cu succes!");
-                if (document.fullscreenElement) { document.exitFullscreen(); }
-                
-                setTimeout(() => {
-                    window.close();
-                    window.history.back();
-                }, 150);
-            })
-            .catch(err => {
-                alert("Eroare la salvare: " + err);
-                btnSave.innerText = "Salvează Semnătura";
-                btnSave.disabled = false;
-            });
         });
-    </script>
+
+        alert("Semnătura a fost salvată!");
+
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+
+        full.style.display = "none";
+        start.style.display = "block";
+
+    } catch (e) {
+        alert("Eroare la salvare");
+        console.error(e);
+    }
+
+    btn.disabled = false;
+    btn.innerText = "Salvează";
+};
+</script>
+
 </body>
 </html>
