@@ -3,65 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Semnătură AppSheet Instant</title>
+<title>Semnătură AppSheet</title>
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
 
-body {
-    font-family: Arial, sans-serif;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial,sans-serif;
     background:#f0f2f5;
     height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
     overflow:hidden;
 }
 
-#start-zone {
-    text-align:center;
+/* PAGINA INTERMEDIARĂ */
+
+#start-zone{
+    width:100%;
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
-.container {
+.container{
     background:white;
     padding:30px;
     border-radius:12px;
     box-shadow:0 4px 15px rgba(0,0,0,0.1);
-    max-width:400px;
+    text-align:center;
+    width:350px;
 }
 
-button {
-    cursor:pointer;
-    border:none;
-    border-radius:6px;
-    padding:14px;
-    font-size:16px;
+.container h2{
+    margin-bottom:10px;
 }
 
-#enter {
+.container p{
+    margin-bottom:20px;
+    color:#666;
+}
+
+.container button{
     width:100%;
+    padding:14px;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+#enter{
     background:#007bff;
     color:white;
 }
 
-#enter:hover { background:#0056b3; }
+#closePage{
+    background:#dc3545;
+    color:white;
+}
 
-#fullscreen {
+/* FULLSCREEN */
+
+#fullscreen{
     display:none;
-    width:100%;
-    height:100%;
-    position:relative;
+    position:fixed;
+    inset:0;
+    width:100vw;
+    height:100vh;
     background:white;
 }
 
-canvas {
+canvas{
     width:100%;
     height:100%;
+    display:block;
     touch-action:none;
 }
 
-.controls {
-    position:absolute;
+#controls{
+    position:fixed;
     bottom:20px;
     left:50%;
     transform:translateX(-50%);
@@ -70,150 +96,263 @@ canvas {
     background:rgba(255,255,255,0.95);
     padding:10px;
     border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
 
-.clear { background:#dc3545; color:white; }
-.save { background:#28a745; color:white; }
-.exit { background:#6c757d; color:white; }
+#controls button{
+    padding:12px 20px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    color:white;
+    font-size:15px;
+}
 
-.clear:hover { background:#b52a37; }
-.save:hover { background:#1f7a31; }
-.exit:hover { background:#555; }
+#clear{
+    background:#dc3545;
+}
+
+#save{
+    background:#28a745;
+}
+
+#exit{
+    background:#6c757d;
+}
+
 </style>
 </head>
 
 <body>
 
+<!-- PAGINA INTERMEDIARĂ -->
+
 <div id="start-zone">
+
     <div class="container">
+
         <h2>Semnătură ridicare</h2>
-        <p>Apasă pentru a deschide ecranul de semnătură</p>
-        <button id="enter">Deschide</button>
+
+        <p>Apasă pentru a deschide zona de semnătură</p>
+
+        <button id="enter">Deschide Semnătura</button>
+
+        <button id="closePage">Închide</button>
+
     </div>
+
 </div>
 
-<div id="fullscreen">
-    <canvas id="c"></canvas>
+<!-- FULLSCREEN -->
 
-    <div class="controls">
-        <button class="clear" id="clear">Șterge</button>
-        <button class="save" id="save">Salvează</button>
-        <button class="exit" id="exit">Ieșire</button>
+<div id="fullscreen">
+
+    <canvas id="canvas"></canvas>
+
+    <div id="controls">
+
+        <button id="clear">Șterge</button>
+
+        <button id="save">Salvează</button>
+
+        <button id="exit">Ieșire</button>
+
     </div>
+
 </div>
 
 <script>
-const start = document.getElementById("start-zone");
-const full = document.getElementById("fullscreen");
-const canvas = document.getElementById("c");
+
+const startZone = document.getElementById("start-zone");
+const fullscreen = document.getElementById("fullscreen");
+
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let drawing = false;
 
-function resize() {
+/* CANVAS */
+
+function resizeCanvas(){
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "#000";
+
 }
 
-window.addEventListener("resize", resize);
-resize();
+resizeCanvas();
 
-document.getElementById("enter").onclick = () => {
-    start.style.display = "none";
-    full.style.display = "block";
+window.addEventListener("resize", resizeCanvas);
+
+/* FULLSCREEN */
+
+document.getElementById("enter").onclick = async () => {
+
+    const el = document.documentElement;
+
+    if(el.requestFullscreen){
+        await el.requestFullscreen();
+    }
+
+    startZone.style.display = "none";
+    fullscreen.style.display = "block";
+
 };
 
-document.getElementById("exit").onclick = () => {
-    full.style.display = "none";
-    start.style.display = "block";
+/* CLOSE PAGINA INTERMEDIARĂ */
+
+document.getElementById("closePage").onclick = () => {
+
+    if(document.fullscreenElement){
+        document.exitFullscreen();
+    }
+
+    window.close();
+
+    setTimeout(()=>{
+        history.back();
+    },300);
+
 };
 
-function pos(e) {
+/* EXIT FULLSCREEN */
+
+document.getElementById("exit").onclick = async () => {
+
+    if(document.fullscreenElement){
+        await document.exitFullscreen();
+    }
+
+    fullscreen.style.display = "none";
+    startZone.style.display = "flex";
+
+};
+
+/* DESEN */
+
+function getPos(e){
+
     const rect = canvas.getBoundingClientRect();
+
     return {
-        x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
-        y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
+        x:(e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
+        y:(e.touches ? e.touches[0].clientY : e.clientY) - rect.top
     };
+
 }
 
-canvas.addEventListener("mousedown", e => {
+function startDraw(e){
+
     drawing = true;
-    const p = pos(e);
+
+    const p = getPos(e);
+
     ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-});
+    ctx.moveTo(p.x,p.y);
 
-canvas.addEventListener("mousemove", e => {
-    if (!drawing) return;
-    const p = pos(e);
-    ctx.lineTo(p.x, p.y);
+}
+
+function draw(e){
+
+    if(!drawing) return;
+
+    const p = getPos(e);
+
+    ctx.lineTo(p.x,p.y);
     ctx.stroke();
-});
 
-canvas.addEventListener("mouseup", () => drawing = false);
-canvas.addEventListener("mouseleave", () => drawing = false);
-
-canvas.addEventListener("touchstart", e => {
-    drawing = true;
-    const p = pos(e);
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
     e.preventDefault();
-});
 
-canvas.addEventListener("touchmove", e => {
-    if (!drawing) return;
-    const p = pos(e);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
-    e.preventDefault();
-});
+}
 
-canvas.addEventListener("touchend", () => drawing = false);
+function stopDraw(){
+
+    drawing = false;
+    ctx.closePath();
+
+}
+
+canvas.addEventListener("mousedown",startDraw);
+canvas.addEventListener("mousemove",draw);
+canvas.addEventListener("mouseup",stopDraw);
+canvas.addEventListener("mouseleave",stopDraw);
+
+canvas.addEventListener("touchstart",startDraw);
+canvas.addEventListener("touchmove",draw);
+canvas.addEventListener("touchend",stopDraw);
+
+/* CLEAR */
 
 document.getElementById("clear").onclick = () => {
+
     ctx.clearRect(0,0,canvas.width,canvas.height);
+
 };
+
+/* SAVE */
 
 document.getElementById("save").onclick = async () => {
 
     const btn = document.getElementById("save");
+
     btn.disabled = true;
     btn.innerText = "Se salvează...";
 
     const image = canvas.toDataURL("image/png");
 
-    const url = "https://script.google.com/macros/s/AKfycbxHpxRCo1pTAXWfwzXyiDsCu1slbkG6hBPx2hGkRxx1EJ8KZIOA1BUuZSaThiJ_pXmrFg/exec";
+    const url = "https://script.google.com/macros/s/AKfycbyNXmPbizIEslMlpdyqBT_sUuJ6KhfuZ4-mO9xBr6kN9i4k8cqFJ534UEUClgd3zu0pyQ/exec";
 
-    try {
-        await fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: {
-                "Content-Type": "application/json"
+    try{
+
+        await fetch(url,{
+            method:"POST",
+            mode:"no-cors",
+            headers:{
+                "Content-Type":"application/json"
             },
-            body: JSON.stringify({
-                image: image
+            body:JSON.stringify({
+                image:image,
+                id:new URLSearchParams(window.location.search).get("id")
             })
         });
 
         alert("Semnătura a fost salvată!");
 
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        /* IEȘIRE FULLSCREEN */
 
-        full.style.display = "none";
-        start.style.display = "block";
+        if(document.fullscreenElement){
+            await document.exitFullscreen();
+        }
 
-    } catch (e) {
+        /* ÎNCHIDE PAGINA */
+
+        setTimeout(()=>{
+
+            window.close();
+
+            history.back();
+
+        },300);
+
+    }
+    catch(err){
+
         alert("Eroare la salvare");
-        console.error(e);
+
+        console.error(err);
+
     }
 
     btn.disabled = false;
     btn.innerText = "Salvează";
+
 };
+
 </script>
 
 </body>
