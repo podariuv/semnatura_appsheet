@@ -38,6 +38,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             max-width: 400px;
             width: 90%;
+            position: relative;
         }
         h2 {
             margin-bottom: 10px;
@@ -72,12 +73,10 @@
             background-color: #0056b3;
         }
         
-        /* BUTON DE CLOSE: Aliniat la aceeași înălțime pe verticală cu butonul albastru (coborât la 50% + 53px) */
+        /* ALINIERE PERFECTĂ: Folosim JavaScript pentru poziția pe verticală, CSS doar pentru distanța din dreapta */
         .close-app-btn {
             position: absolute;
             left: calc(50% + 230px);
-            top: calc(50% + 53px);
-            transform: translateY(-50%);
             padding: 14px 28px;
             font-size: 16px;
             background-color: #6c757d;
@@ -85,6 +84,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             white-space: nowrap;
             z-index: 999;
+            transform: translateY(-50%);
         }
         .close-app-btn:hover {
             background-color: #495057;
@@ -173,6 +173,17 @@
 
         let isDrawing = false;
 
+        // Aliniere dinamică perfectă la nivelul pixelilor între cele două butoane
+        function alignButtons() {
+            const rectBlue = btnEnter.getBoundingClientRect();
+            const centerBlueY = rectBlue.top + (rectBlue.height / 2);
+            btnClosePage.style.top = centerBlueY + 'px';
+        }
+
+        // Execută alinierea la încărcare și când schimbi dimensiunea ferestrei
+        window.addEventListener('load', alignButtons);
+        window.addEventListener('resize', alignButtons);
+
         btnEnter.addEventListener('click', () => {
             if (fullscreenZone.requestFullscreen) {
                 fullscreenZone.requestFullscreen();
@@ -189,5 +200,92 @@
             }
         });
 
-        // REZOLVARE ÎNCHIDERE PAGINĂ: Forțăm redirecționarea înapoi în aplicația AppSheet (history.back)
-        // Dacă nu există istoric, trimitem browser
+        // SOLUȚIE PENTRU ÎNCHIDERE: AppSheet blochează window.close() direct din motive de securitate a WebView-ului.
+        // Singura metodă universală care funcționează pe orice browser și structură AppSheet 
+        // pentru a "curăța" ecranul este trimiterea lui într-o zonă goală sau înapoi.
+        btnClosePage.addEventListener('click', () => {
+            // Încearcă închidere nativă
+            window.close();
+            // Dacă WebView/AppSheet o blochează, forțează ieșirea din script trimițând pe o pagină neutră
+            setTimeout(() => {
+                window.location.replace("about:blank");
+            }, 100);
+        });
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            if (document.fullscreenElement) {
+                startZone.style.setProperty('display', 'none', 'important');
+                fullscreenZone.style.display = 'block';
+                resizeCanvas();
+            } else {
+                startZone.style.setProperty('display', 'flex', 'important');
+                fullscreenZone.style.display = 'none';
+                setTimeout(alignButtons, 50); // Realiniază când ieși din fullscreen
+            }
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        function getCoordinates(e) {
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(coords.x, coords.y);
+        }
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDrawing) return;
+            const bounds = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - bounds.left, e.clientY - bounds.top);
+            ctx.stroke();
+        });
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchmove', (e) => { 
+            if (!isDrawing) return;
+            const bounds = canvas.getBoundingClientRect();
+            ctx.lineTo(e.touches[0].clientX - bounds.left, e.touches[0].clientY - bounds.top);
+            ctx.stroke();
+            e.preventDefault(); 
+        });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.closePath();
+        }
+
+        btnClear.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        btnSave.addEventListener('click', () => {
+            const imageURI = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'semnatura.png';
+            link.href = imageURI;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
