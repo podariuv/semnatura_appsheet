@@ -19,7 +19,6 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
-            position: relative;
         }
         /* Stiluri pentru starea normală */
         .container {
@@ -30,6 +29,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             max-width: 400px;
             width: 90%;
+            position: relative; /* Containerul devine ancora pentru buton */
         }
         h2 {
             margin-bottom: 10px;
@@ -64,17 +64,18 @@
             background-color: #0056b3;
         }
         
-        /* AICI AM MODIFICAT: Butonul de CLOSE este acum mult mai la stânga și mai sus */
+        /* MODIFICARE RADICALĂ: Butonul este scos din flux și mutat manual la stânga și sus */
         .close-app-btn {
-            position: fixed;
-            bottom: 170px; /* Ridicat mai sus (aprox. 4cm față de poziția inițială de 20px) */
-            right: 210px;  /* Mutat mult mai la stânga (aprox. 5cm față de poziția inițială de 20px) */
+            position: absolute;
+            top: 220px;       /* Împins mai sus pe ecran */
+            right: 420px;     /* Forțat masiv în partea stângă (aprox 5-6 cm în funcție de ecran) */
             padding: 12px 24px;
             font-size: 15px;
             background-color: #6c757d;
             color: white;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            z-index: 10;
+            white-space: nowrap; /* Împiedică textul să se rupă pe două rânduri */
+            z-index: 999;
         }
         .close-app-btn:hover {
             background-color: #495057;
@@ -132,9 +133,9 @@
         <h2>Sistem de Captură Semnătură</h2>
         <p>Apasă butonul de mai jos pentru a deschide zona de desenare în tot ecranul.</p>
         <button id="enter-fullscreen">Deschide Fullscreen</button>
+        
+        <button id="close-page" class="close-app-btn">Închide Pagina (Close)</button>
     </div>
-
-    <button id="close-page" class="close-app-btn">Închide Pagina (Close)</button>
 
     <div id="fullscreen-zone">
         <canvas id="signature-canvas"></canvas>
@@ -188,12 +189,10 @@
         function handleFullscreenChange() {
             if (document.fullscreenElement) {
                 startZone.style.display = 'none';
-                btnClosePage.style.display = 'none';
                 fullscreenZone.style.display = 'block';
                 resizeCanvas();
             } else {
                 startZone.style.display = 'block';
-                btnClosePage.style.display = 'block';
                 fullscreenZone.style.display = 'none';
             }
         }
