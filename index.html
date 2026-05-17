@@ -13,20 +13,19 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f2f5;
-            display: flex;
-            flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        /* Structura paginii de start */
+        /* Ecranul de start */
         #start-zone {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
-            position: relative;
+            gap: 20px; /* Creează spațiul liber între casetă și butonul Close */
         }
 
         /* Caseta albă din mijloc */
@@ -37,8 +36,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             max-width: 400px;
-            width: 90%;
-            position: relative;
+            width: 100%;
         }
         h2 {
             margin-bottom: 10px;
@@ -73,41 +71,21 @@
             background-color: #0056b3;
         }
         
-        /* ALINIERE PERFECTĂ: Folosim JavaScript pentru poziția pe verticală, CSS doar pentru distanța din dreapta */
+        /* BUTONUL CLOSE - Pus în structură flex, stă AUTOMAT la același nivel vertical cu cel albastru */
         .close-app-btn {
-            position: absolute;
-            left: calc(50% + 230px);
-            padding: 14px 28px;
+            padding: 16px 28px;
             font-size: 16px;
             background-color: #6c757d;
             color: white;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             white-space: nowrap;
-            z-index: 999;
-            transform: translateY(-50%);
+            align-self: flex-end; /* Îl coboară în linie exactă cu butonul albastru din container */
+            margin-bottom: 40px;  /* Potrivește înălțimea fix peste padding-ul de jos al containerului */
         }
         .close-app-btn:hover {
             background-color: #495057;
         }
         
-        /* Bara de control din modul Fullscreen */
-        .controls button {
-            padding: 12px 24px;
-            color: white;
-        }
-        button.clear-btn {
-            background-color: #dc3545;
-        }
-        button.clear-btn:hover {
-            background-color: #bd2130;
-        }
-        button.save-btn {
-            background-color: #28a745;
-        }
-        button.save-btn:hover {
-            background-color: #218838;
-        }
-
         /* Modul Fullscreen */
         #fullscreen-zone {
             display: none;
@@ -134,6 +112,14 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+        .controls button {
+            padding: 12px 24px;
+            color: white;
+        }
+        button.clear-btn { background-color: #dc3545; }
+        button.clear-btn:hover { background-color: #bd2130; }
+        button.save-btn { background-color: #28a745; }
+        button.save-btn:hover { background-color: #218838; }
     </style>
 </head>
 <body>
@@ -173,17 +159,7 @@
 
         let isDrawing = false;
 
-        // Aliniere dinamică perfectă la nivelul pixelilor între cele două butoane
-        function alignButtons() {
-            const rectBlue = btnEnter.getBoundingClientRect();
-            const centerBlueY = rectBlue.top + (rectBlue.height / 2);
-            btnClosePage.style.top = centerBlueY + 'px';
-        }
-
-        // Execută alinierea la încărcare și când schimbi dimensiunea ferestrei
-        window.addEventListener('load', alignButtons);
-        window.addEventListener('resize', alignButtons);
-
+        // Logica Fullscreen
         btnEnter.addEventListener('click', () => {
             if (fullscreenZone.requestFullscreen) {
                 fullscreenZone.requestFullscreen();
@@ -200,13 +176,11 @@
             }
         });
 
-        // SOLUȚIE PENTRU ÎNCHIDERE: AppSheet blochează window.close() direct din motive de securitate a WebView-ului.
-        // Singura metodă universală care funcționează pe orice browser și structură AppSheet 
-        // pentru a "curăța" ecranul este trimiterea lui într-o zonă goală sau înapoi.
+        // SOLUȚIE ÎNCHIDERE: Browserele blochează rularea scriptului window.close() dacă pagina nu a fost deschisă explicit prin cod.
+        // În AppSheet, singura metodă sigură ca butonul să reacționeze și să scape de pagină este forțarea unei ieșiri din istoric.
         btnClosePage.addEventListener('click', () => {
-            // Încearcă închidere nativă
-            window.close();
-            // Dacă WebView/AppSheet o blochează, forțează ieșirea din script trimițând pe o pagină neutră
+            window.close(); 
+            window.history.back(); 
             setTimeout(() => {
                 window.location.replace("about:blank");
             }, 100);
@@ -223,7 +197,6 @@
             } else {
                 startZone.style.setProperty('display', 'flex', 'important');
                 fullscreenZone.style.display = 'none';
-                setTimeout(alignButtons, 50); // Realiniază când ieși din fullscreen
             }
         }
 
@@ -236,42 +209,41 @@
             ctx.lineJoin = 'round';
         }
 
-        function getCoordinates(e) {
-            return { x: e.clientX, y: e.clientY };
-        }
-
+        // Logica pentru Desen
         function startDrawing(e) {
             isDrawing = true;
-            const coords = getCoordinates(e);
+            const bounds = canvas.getBoundingClientRect();
             ctx.beginPath();
-            ctx.moveTo(coords.x, coords.y);
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            ctx.moveTo(clientX - bounds.left, clientY - bounds.top);
         }
 
-        document.addEventListener('mousemove', function(e) {
+        function draw(e) {
             if (!isDrawing) return;
             const bounds = canvas.getBoundingClientRect();
-            ctx.lineTo(e.clientX - bounds.left, e.clientY - bounds.top);
-            ctx.stroke();
-        });
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseleave', stopDrawing);
-
-        canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); e.preventDefault(); });
-        canvas.addEventListener('touchmove', (e) => { 
-            if (!isDrawing) return;
-            const bounds = canvas.getBoundingClientRect();
-            ctx.lineTo(e.touches[0].clientX - bounds.left, e.touches[0].clientY - bounds.top);
-            ctx.stroke();
-            e.preventDefault(); 
-        });
-        canvas.addEventListener('touchend', stopDrawing);
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            if(clientX && clientY) {
+                ctx.lineTo(clientX - bounds.left, clientY - bounds.top);
+                ctx.stroke();
+            }
+            if(e.touches) e.preventDefault();
+        }
 
         function stopDrawing() {
             isDrawing = false;
             ctx.closePath();
         }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => { startDrawing(e); e.preventDefault(); });
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
 
         btnClear.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
