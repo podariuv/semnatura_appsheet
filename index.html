@@ -64,11 +64,11 @@
             background-color: #0056b3;
         }
         
-        /* Butonul de CLOSE mutat mai la stânga și mai sus conform cerințelor */
+        /* AICI AM MODIFICAT: Butonul de CLOSE este acum mult mai la stânga și mai sus */
         .close-app-btn {
             position: fixed;
-            bottom: 170px; /* Ridicat mai sus (aprox. 4cm) */
-            right: 210px;  /* Mutat mai la stânga (aprox. 5cm) */
+            bottom: 170px; /* Ridicat mai sus (aprox. 4cm față de poziția inițială de 20px) */
+            right: 210px;  /* Mutat mult mai la stânga (aprox. 5cm față de poziția inițială de 20px) */
             padding: 12px 24px;
             font-size: 15px;
             background-color: #6c757d;
@@ -190,4 +190,71 @@
                 startZone.style.display = 'none';
                 btnClosePage.style.display = 'none';
                 fullscreenZone.style.display = 'block';
-                resize
+                resizeCanvas();
+            } else {
+                startZone.style.display = 'block';
+                btnClosePage.style.display = 'block';
+                fullscreenZone.style.display = 'none';
+            }
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        // --- Logica de Desenare ---
+        function getCoordinates(e) {
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(coords.x, coords.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const coords = getCoordinates(e);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.closePath();
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // --- Acțiuni Canvas ---
+        btnClear.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        btnSave.addEventListener('click', () => {
+            const imageURI = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'semnatura.png';
+            link.href = imageURI;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
