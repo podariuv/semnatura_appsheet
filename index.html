@@ -72,11 +72,11 @@
             background-color: #0056b3;
         }
         
-        /* BUTONUL DE CLOSE - Păstrat în stânga, dar coborât cu ~3-4cm (130px) față de axa centrală */
+        /* BUTONUL DE CLOSE - Poziționat corect în DREAPTA și COBORÂT cu ~3-4cm (130px) */
         .close-app-btn {
             position: absolute;
-            right: calc(50% + 230px);
-            top: calc(50% + 130px);
+            left: calc(50% + 230px); /* Împins în DREAPTA casetei centrale */
+            top: calc(50% + 130px);  /* Coborât sub axa centrală */
             transform: translateY(-50%);
             padding: 14px 28px;
             font-size: 16px;
@@ -138,4 +138,132 @@
 </head>
 <body>
 
-    <div class="
+    <div class="page-layout" id="start-zone">
+        
+        <div class="container">
+            <h2>Sistem de Captură Semnătură</h2>
+            <p>Apasă butonul de mai jos pentru a deschide zona de desenare în tot ecranul.</p>
+            <button id="enter-fullscreen">Deschide Fullscreen</button>
+        </div>
+
+        <button id="close-page" class="close-app-btn">Închide Pagina (Close)</button>
+
+    </div>
+
+    <div id="fullscreen-zone">
+        <canvas id="signature-canvas"></canvas>
+        <div class="controls">
+            <button class="clear-btn" id="clear-canvas">Șterge</button>
+            <button class="save-btn" id="save-signature">Salvează Semnătura</button>
+            <button id="exit-fullscreen" style="background-color: #6c757d;">Ieșire</button>
+        </div>
+    </div>
+
+    <script>
+        const startZone = document.getElementById('start-zone');
+        const fullscreenZone = document.getElementById('fullscreen-zone');
+        const canvas = document.getElementById('signature-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const btnEnter = document.getElementById('enter-fullscreen');
+        const btnExit = document.getElementById('exit-fullscreen');
+        const btnClosePage = document.getElementById('close-page');
+        const btnClear = document.getElementById('clear-canvas');
+        const btnSave = document.getElementById('save-signature');
+
+        let isDrawing = false;
+
+        btnEnter.addEventListener('click', () => {
+            if (fullscreenZone.requestFullscreen) {
+                fullscreenZone.requestFullscreen();
+            } else if (fullscreenZone.webkitRequestFullscreen) {
+                fullscreenZone.webkitRequestFullscreen();
+            }
+        });
+
+        btnExit.addEventListener('click', () => {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        });
+
+        btnClosePage.addEventListener('click', () => {
+            window.close();
+            setTimeout(() => {
+                window.location.href = "about:blank";
+            }, 50);
+        });
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            if (document.fullscreenElement) {
+                startZone.style.display = 'none';
+                fullscreenZone.style.display = 'block';
+                resizeCanvas();
+            } else {
+                startZone.style.display = 'flex';
+                fullscreenZone.style.display = 'none';
+            }
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        function getCoordinates(e) {
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(coords.x, coords.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const coords = getCoordinates(e);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.closePath();
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        btnClear.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        btnSave.addEventListener('click', () => {
+            const imageURI = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = 'semnatura.png';
+            link.href = imageURI;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
