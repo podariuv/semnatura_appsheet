@@ -19,6 +19,7 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
+            position: relative; /* Necesar pentru poziționarea butonului de close */
         }
         /* Stiluri pentru starea normală */
         .container {
@@ -27,6 +28,8 @@
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 400px;
+            width: 90%;
         }
         h2 {
             margin-bottom: 10px;
@@ -36,12 +39,7 @@
             margin-bottom: 25px;
             color: #666;
         }
-        .btn-group-start {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
+        
         button {
             font-size: 16px;
             font-weight: bold;
@@ -53,26 +51,30 @@
         button:active {
             transform: scale(0.98);
         }
-        /* Butonul principal de Fullscreen */
+        
+        /* Butonul principal de Fullscreen - Centrat */
         #enter-fullscreen {
             padding: 16px 32px;
             font-size: 18px;
             background-color: #007bff;
             color: white;
             width: 100%;
-            max-width: 300px;
         }
         #enter-fullscreen:hover {
             background-color: #0056b3;
         }
-        /* Butonul mare de CLOSE din pagina intermediară */
+        
+        /* Butonul de CLOSE mutat în DREAPTA JOS */
         .close-app-btn {
-            padding: 16px 32px;
-            font-size: 18px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            font-size: 15px;
             background-color: #6c757d;
             color: white;
-            width: 100%;
-            max-width: 300px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            z-index: 10;
         }
         .close-app-btn:hover {
             background-color: #495057;
@@ -98,7 +100,7 @@
 
         /* Stiluri pentru modul Fullscreen */
         #fullscreen-zone {
-            display: none; /* Ascuns inițial */
+            display: none;
             width: 100%;
             height: 100%;
             background-color: #ffffff;
@@ -126,19 +128,14 @@
 </head>
 <body>
 
-    <!-- Ecranul inițial / Pagina intermediară -->
     <div class="container" id="start-zone">
         <h2>Sistem de Captură Semnătură</h2>
         <p>Apasă butonul de mai jos pentru a deschide zona de desenare în tot ecranul.</p>
-        
-        <div class="btn-group-start">
-            <button id="enter-fullscreen">Deschide Fullscreen</button>
-            <!-- Butonul nou adăugat, mare și vizibil -->
-            <button id="close-page" class="close-app-btn">Închide Pagina (Close)</button>
-        </div>
+        <button id="enter-fullscreen">Deschide Fullscreen</button>
     </div>
 
-    <!-- Zona care va deveni Fullscreen -->
+    <button id="close-page" class="close-app-btn">Închide Pagina (Close)</button>
+
     <div id="fullscreen-zone">
         <canvas id="signature-canvas"></canvas>
         <div class="controls">
@@ -166,12 +163,11 @@
         btnEnter.addEventListener('click', () => {
             if (fullscreenZone.requestFullscreen) {
                 fullscreenZone.requestFullscreen();
-            } else if (fullscreenZone.webkitRequestFullscreen) { /* Safari */
+            } else if (fullscreenZone.webkitRequestFullscreen) {
                 fullscreenZone.webkitRequestFullscreen();
             }
         });
 
-        // La apăsarea pe Ieșire din Fullscreen, doar revenim la pagina intermediară
         btnExit.addEventListener('click', () => {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -180,48 +176,41 @@
             }
         });
 
-        // --- Logica butonului mare CLOSE din pagina intermediară ---
+        // --- Logica de Închidere Definitivă a Paginii ---
         btnClosePage.addEventListener('click', () => {
-            window.close(); // Încearcă închiderea tab-ului
-            
-            // Plan de rezervă dacă browserul blochează închiderea automată
-            setTimeout(() => {
-                window.location.href = "about:blank";
-            }, 100);
+            window.close(); // Închide tab-ul complet (funcționează direct când e apelat din AppSheet)
         });
 
-        // Detectează schimbarea stării de fullscreen pentru a ajusta canvas-ul
+        // Schimbarea stării de fullscreen (ascundem/afișăm elementele de fundal)
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
         function handleFullscreenChange() {
             if (document.fullscreenElement) {
                 startZone.style.display = 'none';
+                btnClosePage.style.display = 'none'; // Ascunde și butonul din dreapta jos în fullscreen
                 fullscreenZone.style.display = 'block';
                 resizeCanvas();
             } else {
                 startZone.style.display = 'block';
+                btnClosePage.style.display = 'block'; // Reafișează butonul la ieșirea din fullscreen
                 fullscreenZone.style.display = 'none';
             }
         }
 
-        // Ajustează rezoluția internă a canvas-ului la dimensiunea ecranului
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            ctx.strokeStyle = '#000000'; // Culoarea semnăturii
-            ctx.lineWidth = 3;           // Grosimea liniei
-            ctx.lineCap = 'round';       // Rotunjire
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
         }
 
         // --- Logica de Desenare ---
         function getCoordinates(e) {
-            return {
-                x: e.clientX,
-                y: e.clientY
-            };
+            return { x: e.clientX, y: e.clientY };
         }
 
         function startDrawing(e) {
@@ -252,7 +241,7 @@
         canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
         canvas.addEventListener('touchend', stopDrawing);
 
-        // --- Butoane Acțiuni Canvas ---
+        // --- Acțiuni Canvas ---
         btnClear.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
