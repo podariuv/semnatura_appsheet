@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Captură Semnătură Fullscreen</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f2f5;
@@ -19,16 +15,7 @@
             align-items: center;
             justify-content: center;
         }
-        
-        /* Ecranul de start */
-        #start-zone {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px; /* Creează spațiul liber între casetă și butonul Close */
-        }
-
-        /* Caseta albă din mijloc */
+        #start-zone { display: flex; align-items: center; justify-content: center; gap: 20px; }
         .container {
             text-align: center;
             background: white;
@@ -38,15 +25,8 @@
             max-width: 400px;
             width: 100%;
         }
-        h2 {
-            margin-bottom: 10px;
-            color: #333;
-        }
-        p {
-            margin-bottom: 25px;
-            color: #666;
-        }
-        
+        h2 { margin-bottom: 10px; color: #333; }
+        p { margin-bottom: 25px; color: #666; }
         button {
             font-size: 16px;
             font-weight: bold;
@@ -55,11 +35,7 @@
             border-radius: 6px;
             transition: background 0.2s, transform 0.1s;
         }
-        button:active {
-            transform: scale(0.98);
-        }
-        
-        /* Butonul albastru principal */
+        button:active { transform: scale(0.98); }
         #enter-fullscreen {
             padding: 16px 32px;
             font-size: 18px;
@@ -67,11 +43,7 @@
             color: white;
             width: 100%;
         }
-        #enter-fullscreen:hover {
-            background-color: #0056b3;
-        }
-        
-        /* BUTONUL CLOSE - Pus în structură flex, stă AUTOMAT la același nivel vertical cu cel albastru */
+        #enter-fullscreen:hover { background-color: #0056b3; }
         .close-app-btn {
             padding: 16px 28px;
             font-size: 16px;
@@ -79,27 +51,12 @@
             color: white;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             white-space: nowrap;
-            align-self: flex-end; /* Îl coboară în linie exactă cu butonul albastru din container */
-            margin-bottom: 40px;  /* Potrivește înălțimea fix peste padding-ul de jos al containerului */
+            align-self: flex-end;
+            margin-bottom: 40px;
         }
-        .close-app-btn:hover {
-            background-color: #495057;
-        }
-        
-        /* Modul Fullscreen */
-        #fullscreen-zone {
-            display: none;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            position: relative;
-        }
-        #signature-canvas {
-            width: 100%;
-            height: 100%;
-            cursor: crosshair;
-            display: block;
-        }
+        .close-app-btn:hover { background-color: #495057; }
+        #fullscreen-zone { display: none; width: 100%; height: 100%; background-color: #ffffff; position: relative; }
+        #signature-canvas { width: 100%; height: 100%; cursor: crosshair; display: block; }
         .controls {
             position: absolute;
             bottom: 20px;
@@ -112,10 +69,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .controls button {
-            padding: 12px 24px;
-            color: white;
-        }
+        .controls button { padding: 12px 24px; color: white; }
         button.clear-btn { background-color: #dc3545; }
         button.clear-btn:hover { background-color: #bd2130; }
         button.save-btn { background-color: #28a745; }
@@ -125,15 +79,12 @@
 <body>
 
     <div id="start-zone">
-        
         <div class="container">
             <h2>Sistem de Captură Semnătură</h2>
             <p>Apasă butonul de mai jos pentru a deschide zona de desenare în tot ecranul.</p>
             <button id="enter-fullscreen">Deschide Fullscreen</button>
         </div>
-
         <button id="close-page" class="close-app-btn">Închide Pagina (Close)</button>
-
     </div>
 
     <div id="fullscreen-zone">
@@ -159,31 +110,20 @@
 
         let isDrawing = false;
 
-        // Logica Fullscreen
         btnEnter.addEventListener('click', () => {
-            if (fullscreenZone.requestFullscreen) {
-                fullscreenZone.requestFullscreen();
-            } else if (fullscreenZone.webkitRequestFullscreen) {
-                fullscreenZone.webkitRequestFullscreen();
-            }
+            if (fullscreenZone.requestFullscreen) { fullscreenZone.requestFullscreen(); }
+            else if (fullscreenZone.webkitRequestFullscreen) { fullscreenZone.webkitRequestFullscreen(); }
         });
 
         btnExit.addEventListener('click', () => {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
+            if (document.exitFullscreen) { document.exitFullscreen(); }
+            else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
         });
 
-        // SOLUȚIE ÎNCHIDERE: Browserele blochează rularea scriptului window.close() dacă pagina nu a fost deschisă explicit prin cod.
-        // În AppSheet, singura metodă sigură ca butonul să reacționeze și să scape de pagină este forțarea unei ieșiri din istoric.
         btnClosePage.addEventListener('click', () => {
             window.close(); 
             window.history.back(); 
-            setTimeout(() => {
-                window.location.replace("about:blank");
-            }, 100);
+            setTimeout(() => { window.location.replace("about:blank"); }, 100);
         });
 
         document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -209,7 +149,6 @@
             ctx.lineJoin = 'round';
         }
 
-        // Logica pentru Desen
         function startDrawing(e) {
             isDrawing = true;
             const bounds = canvas.getBoundingClientRect();
@@ -231,32 +170,38 @@
             if(e.touches) e.preventDefault();
         }
 
-        function stopDrawing() {
-            isDrawing = false;
-            ctx.closePath();
-        }
+        function stopDrawing() { isDrawing = false; ctx.closePath(); }
 
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
-
         canvas.addEventListener('touchstart', (e) => { startDrawing(e); e.preventDefault(); });
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', stopDrawing);
 
-        btnClear.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        });
+        btnClear.addEventListener('click', () => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
 
+        // TRANSMITERE DIRECTĂ ÎN FORMULARUL APPSHEET VIRTUAL
         btnSave.addEventListener('click', () => {
             const imageURI = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = 'semnatura.png';
-            link.href = imageURI;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            
+            // Trimite imaginea către containerul iframe sau fereastra AppSheet care o găzduiește
+            const targetWindow = window.opener || window.parent;
+            if (targetWindow) {
+                targetWindow.postMessage({
+                    type: "APPSHEET_INPUT",
+                    column: "Semnatura ridicare", // Numele EXACT al coloanei tale tip Signature din AppSheet
+                    value: imageURI
+                }, "*");
+            }
+
+            if (document.fullscreenElement) { document.exitFullscreen(); }
+            
+            setTimeout(() => {
+                window.close();
+                window.history.back();
+            }, 150);
         });
     </script>
 </body>
