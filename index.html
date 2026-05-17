@@ -19,7 +19,7 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
-            position: relative; /* Necesar pentru poziționarea butonului de close */
+            position: relative;
         }
         /* Stiluri pentru starea normală */
         .container {
@@ -64,11 +64,11 @@
             background-color: #0056b3;
         }
         
-        /* Butonul de CLOSE mutat în DREAPTA JOS */
+        /* Butonul de CLOSE mutat mai la stânga și mai sus conform cerințelor */
         .close-app-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 170px; /* Ridicat mai sus (aprox. 4cm) */
+            right: 210px;  /* Mutat mai la stânga (aprox. 5cm) */
             padding: 12px 24px;
             font-size: 15px;
             background-color: #6c757d;
@@ -178,83 +178,16 @@
 
         // --- Logica de Închidere Definitivă a Paginii ---
         btnClosePage.addEventListener('click', () => {
-            window.close(); // Închide tab-ul complet (funcționează direct când e apelat din AppSheet)
+            window.close();
         });
 
-        // Schimbarea stării de fullscreen (ascundem/afișăm elementele de fundal)
+        // Schimbarea stării de fullscreen
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
         function handleFullscreenChange() {
             if (document.fullscreenElement) {
                 startZone.style.display = 'none';
-                btnClosePage.style.display = 'none'; // Ascunde și butonul din dreapta jos în fullscreen
+                btnClosePage.style.display = 'none';
                 fullscreenZone.style.display = 'block';
-                resizeCanvas();
-            } else {
-                startZone.style.display = 'block';
-                btnClosePage.style.display = 'block'; // Reafișează butonul la ieșirea din fullscreen
-                fullscreenZone.style.display = 'none';
-            }
-        }
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-        }
-
-        // --- Logica de Desenare ---
-        function getCoordinates(e) {
-            return { x: e.clientX, y: e.clientY };
-        }
-
-        function startDrawing(e) {
-            isDrawing = true;
-            const coords = getCoordinates(e);
-            ctx.beginPath();
-            ctx.moveTo(coords.x, coords.y);
-        }
-
-        function draw(e) {
-            if (!isDrawing) return;
-            const coords = getCoordinates(e);
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
-        }
-
-        function stopDrawing() {
-            isDrawing = false;
-            ctx.closePath();
-        }
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseleave', stopDrawing);
-
-        canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); e.preventDefault(); });
-        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
-        canvas.addEventListener('touchend', stopDrawing);
-
-        // --- Acțiuni Canvas ---
-        btnClear.addEventListener('click', () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        });
-
-        btnSave.addEventListener('click', () => {
-            const imageURI = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = 'semnatura.png';
-            link.href = imageURI;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-    </script>
-</body>
-</html>
+                resize
