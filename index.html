@@ -20,7 +20,7 @@
         }
         
         /* Structura paginii de start */
-        .page-layout {
+        #start-zone {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -72,11 +72,11 @@
             background-color: #0056b3;
         }
         
-        /* BUTONUL DE CLOSE - Poziționat corect în DREAPTA și COBORÂT cu ~3-4cm (130px) */
+        /* BUTONUL DE CLOSE - În DREAPTA și COBORÂT cu ~3-4cm (130px) */
         .close-app-btn {
             position: absolute;
-            left: calc(50% + 230px); /* Împins în DREAPTA casetei centrale */
-            top: calc(50% + 130px);  /* Coborât sub axa centrală */
+            left: calc(50% + 230px);
+            top: calc(50% + 130px);
             transform: translateY(-50%);
             padding: 14px 28px;
             font-size: 16px;
@@ -138,7 +138,7 @@
 </head>
 <body>
 
-    <div class="page-layout" id="start-zone">
+    <div id="start-zone">
         
         <div class="container">
             <h2>Sistem de Captură Semnătură</h2>
@@ -201,11 +201,11 @@
 
         function handleFullscreenChange() {
             if (document.fullscreenElement) {
-                startZone.style.display = 'none';
+                startZone.style.setProperty('display', 'none', 'important');
                 fullscreenZone.style.display = 'block';
                 resizeCanvas();
             } else {
-                startZone.style.display = 'flex';
+                startZone.style.setProperty('display', 'flex', 'important');
                 fullscreenZone.style.display = 'none';
             }
         }
@@ -230,26 +230,31 @@
             ctx.moveTo(coords.x, coords.y);
         }
 
-        function draw(e) {
+        document.addEventListener('mousemove', function(e) {
             if (!isDrawing) return;
-            const coords = getCoordinates(e);
-            ctx.lineTo(coords.x, coords.y);
+            const bounds = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - bounds.left, e.clientY - bounds.top);
             ctx.stroke();
-        }
+        });
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchmove', (e) => { 
+            if (!isDrawing) return;
+            const bounds = canvas.getBoundingClientRect();
+            ctx.lineTo(e.touches[0].clientX - bounds.left, e.touches[0].clientY - bounds.top);
+            ctx.stroke();
+            e.preventDefault(); 
+        });
+        canvas.addEventListener('touchend', stopDrawing);
 
         function stopDrawing() {
             isDrawing = false;
             ctx.closePath();
         }
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseleave', stopDrawing);
-
-        canvas.addEventListener('touchstart', (e) => { startDrawing(e.touches[0]); e.preventDefault(); });
-        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
-        canvas.addEventListener('touchend', stopDrawing);
 
         btnClear.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
