@@ -174,9 +174,12 @@ let drawing = false;
 /* CANVAS */
 
 function resizeCanvas(){
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
+    // FUNDAL
+    ctx.fillStyle = "#f2f2f2";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
@@ -290,7 +293,8 @@ canvas.addEventListener("touchend",stopDraw);
 
 document.getElementById("clear").onclick = () => {
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#f2f2f2";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
 };
 
