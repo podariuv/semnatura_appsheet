@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fișă Service</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f3f5;
+  margin: 0;
+  padding: 20px;
+  color: #222;
+}
+
+.card {
+  max-width: 850px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.section {
+  margin-top: 22px;
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.label {
+  font-weight: bold;
+  color: #555;
+}
+
+.value {
+  color: #111;
+}
+
+.error {
+  color: #b00020;
+  text-align: center;
+  font-weight: bold;
+}
+
+@media(max-width: 600px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h1>Fișă service nr <span id="ID_Fisa"></span></h1>
+
+  <div id="loading">Se încarcă fișa...</div>
+  <div id="error" class="error"></div>
+
+  <div id="content" style="display:none;">
+
+    <div class="section">
+      <div class="row"><div class="label">Data intrare</div><div class="value" id="Data_Intrare"></div></div>
+      <div class="row"><div class="label">Status</div><div class="value" id="Status"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="row"><div class="label">Produs</div><div class="value" id="Produs"></div></div>
+      <div class="row"><div class="label">Producător</div><div class="value" id="Producator"></div></div>
+      <div class="row"><div class="label">Model</div><div class="value" id="Model"></div></div>
+      <div class="row"><div class="label">Serie</div><div class="value" id="Serie"></div></div>
+      <div class="row"><div class="label">Accesorii</div><div class="value" id="Accesorii"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="row"><div class="label">Data achiziție</div><div class="value" id="Data_achizitie"></div></div>
+      <div class="row"><div class="label">Data sesizare</div><div class="value" id="Data_reclamatie"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="row"><div class="label">Reclamație client</div><div class="value" id="Reclamatie_client"></div></div>
+      <div class="row"><div class="label">Note / Observații</div><div class="value" id="Note_Observatii"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="row"><div class="label">Client</div><div class="value" id="Client"></div></div>
+      <div class="row"><div class="label">Telefon</div><div class="value" id="Telefon"></div></div>
+      <div class="row"><div class="label">Adresă</div><div class="value" id="Adresa"></div></div>
+      <div class="row"><div class="label">Email</div><div class="value" id="Email"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="row"><div class="label">Reparație / Constatare</div><div class="value" id="Tip_Reparatie"></div></div>
+      <div class="row"><div class="label">Detalii</div><div class="value" id="Reparatie_Constatare"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="row"><div class="label">Avans plătit</div><div class="value" id="Avans_Platit"></div></div>
+      <div class="row"><div class="label">Preț reparație</div><div class="value" id="Pret_Reparatie"></div></div>
+      <div class="row"><div class="label">Rest de plată</div><div class="value" id="Rest_de_plata"></div></div>
+    </div>
+
+    <div class="section">
+      <div class="row"><div class="label">Status expediție</div><div class="value" id="Status_expeditie"></div></div>
+      <div class="row"><div class="label">Data ieșire</div><div class="value" id="Data_Iesire"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwVmRLuoHqPTGzhq7q-vG99s0PAdYBwzchPFNMunCYbYJrr03NatCEHAUxduBauIuC-Lw/exec";
+
+function setText(id, value) {
+  document.getElementById(id).innerText = value || "-";
+}
+
+function showFisa(data) {
+  document.getElementById("loading").style.display = "none";
+
+  if (data.status !== "ok") {
+    document.getElementById("error").innerText = data.message || "Fișa nu a fost găsită.";
+    return;
+  }
+
+  document.getElementById("content").style.display = "block";
+
+  Object.keys(data).forEach(key => {
+    if (document.getElementById(key)) {
+      setText(key, data[key]);
+    }
+  });
+}
+
+const token = new URLSearchParams(window.location.search).get("t");
+
+if (!token) {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("error").innerText = "Token lipsă.";
+} else {
+  const script = document.createElement("script");
+  script.src = API_URL + "?t=" + encodeURIComponent(token) + "&callback=showFisa";
+  document.body.appendChild(script);
+}
+</script>
+
+</body>
+</html>
